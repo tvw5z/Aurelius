@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -54,6 +55,10 @@ class ChatRequest(BaseModel):
 
 @app.get("/")
 def root():
+    return FileResponse("App/index.html")
+
+@app.get("/api-info")
+def api_info():
     return {
         "name": "Aurelius",
         "status": "online",
