@@ -1,0 +1,1790 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Aurelius | Life Assistant</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        arabic: ['Alexandria', 'sans-serif'],
+                        english: ['Plus Jakarta Sans', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Alexandria', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .font-english {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb {
+            border-radius: 999px;
+            background: #cbd5e1;
+        }
+
+        .dark .scrollbar::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+
+        .message-content strong {
+            font-weight: 700;
+        }
+
+        .message-content code {
+            padding: 2px 6px;
+            border-radius: 6px;
+            background: rgba(148, 163, 184, 0.15);
+            font-family: monospace;
+        }
+
+        .typing-dot {
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: .4;
+            }
+
+            30% {
+                transform: translateY(-5px);
+                opacity: 1;
+            }
+        }
+
+        .sidebar-transition {
+            transition: transform .3s ease, width .3s ease;
+        }
+
+        .fade-in {
+            animation: fadeIn .25s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        textarea {
+            resize: none;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-white">
+
+<div id="app" class="min-h-screen flex">
+
+    <!-- Mobile Overlay -->
+    <div
+        id="sidebarOverlay"
+        class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden"
+        onclick="toggleSidebar()">
+    </div>
+
+    <!-- Sidebar -->
+    <aside
+        id="sidebar"
+        class="fixed lg:static z-40 right-0 top-0 h-screen w-[290px]
+        bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800
+        flex flex-col sidebar-transition translate-x-full lg:translate-x-0">
+
+        <!-- Logo -->
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800">
+
+            <div class="flex items-center gap-3">
+
+                <div class="w-11 h-11 rounded-2xl bg-slate-900 dark:bg-white
+                            flex items-center justify-center shadow-lg">
+
+                    <span class="text-white dark:text-slate-900 text-xl font-bold">
+                        A
+                    </span>
+
+                </div>
+
+                <div>
+                    <h1 class="font-bold text-lg tracking-tight">
+                        Aurelius
+                    </h1>
+
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400
+                              font-english tracking-wider">
+                        LIFE ASSISTANT
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- New Chat -->
+        <div class="p-4">
+
+            <button
+                onclick="createNewChat()"
+                class="w-full flex items-center justify-center gap-2
+                       px-4 py-3 rounded-xl
+                       bg-slate-900 hover:bg-slate-800
+                       dark:bg-white dark:hover:bg-slate-200
+                       text-white dark:text-slate-900
+                       font-semibold text-sm transition">
+
+                <i data-lucide="plus" class="w-4 h-4"></i>
+
+                محادثة جديدة
+
+            </button>
+
+        </div>
+
+        <!-- Memory -->
+        <div class="px-4">
+
+            <button
+                onclick="openMemoryModal()"
+                class="w-full flex items-center gap-3 p-3 rounded-xl
+                       hover:bg-slate-100 dark:hover:bg-slate-800
+                       transition text-right">
+
+                <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800
+                            flex items-center justify-center">
+
+                    <i data-lucide="brain" class="w-4 h-4"></i>
+
+                </div>
+
+                <div class="flex-1">
+
+                    <div class="text-sm font-semibold">
+                        الذاكرة
+                    </div>
+
+                    <div id="memoryCount"
+                         class="text-xs text-slate-500 dark:text-slate-400">
+                        0 معلومة
+                    </div>
+
+                </div>
+
+            </button>
+
+        </div>
+
+        <!-- Chats title -->
+        <div class="px-5 pt-5 pb-2">
+
+            <div class="text-[11px] font-semibold
+                        text-slate-400 uppercase tracking-wider">
+
+                المحادثات
+
+            </div>
+
+        </div>
+
+        <!-- Chat List -->
+        <div
+            id="chatList"
+            class="flex-1 overflow-y-auto scrollbar px-3 space-y-1">
+        </div>
+
+        <!-- Bottom -->
+        <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+
+            <button
+                onclick="toggleTheme()"
+                class="w-full flex items-center gap-3 p-3 rounded-xl
+                       hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+
+                <div class="w-9 h-9 rounded-xl
+                            bg-slate-100 dark:bg-slate-800
+                            flex items-center justify-center">
+
+                    <i id="themeIcon" data-lucide="moon" class="w-4 h-4"></i>
+
+                </div>
+
+                <span id="themeText" class="text-sm font-medium">
+                    الوضع الداكن
+                </span>
+
+            </button>
+
+        </div>
+
+    </aside>
+
+    <!-- Main -->
+    <main class="flex-1 min-w-0 flex flex-col h-screen">
+
+        <!-- Header -->
+        <header
+            class="h-16 shrink-0 flex items-center justify-between
+                   px-4 md:px-6
+                   border-b border-slate-200 dark:border-slate-800
+                   bg-white/80 dark:bg-slate-950/80 backdrop-blur">
+
+            <div class="flex items-center gap-3">
+
+                <button
+                    onclick="toggleSidebar()"
+                    class="lg:hidden w-10 h-10 rounded-xl
+                           hover:bg-slate-100 dark:hover:bg-slate-800
+                           flex items-center justify-center">
+
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+
+                </button>
+
+                <div>
+
+                    <div id="headerTitle"
+                         class="font-semibold text-sm md:text-base">
+                        محادثة جديدة
+                    </div>
+
+                    <div class="flex items-center gap-2 mt-0.5">
+
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+
+                        <span class="text-[10px] text-slate-500 dark:text-slate-400">
+                            Aurelius متصل
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="flex items-center gap-2">
+
+                <span
+                    class="hidden sm:block text-[10px] font-english
+                           text-slate-400">
+                    v0.1
+                </span>
+
+                <button
+                    onclick="clearCurrentChat()"
+                    class="w-9 h-9 rounded-xl
+                           hover:bg-slate-100 dark:hover:bg-slate-800
+                           flex items-center justify-center"
+                    title="مسح المحادثة">
+
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+
+                </button>
+
+            </div>
+
+        </header>
+
+        <!-- Messages -->
+        <section
+            id="chatMessages"
+            class="flex-1 overflow-y-auto scrollbar">
+
+            <div
+                id="welcomeScreen"
+                class="min-h-full flex items-center justify-center px-5 py-10">
+
+                <div class="max-w-2xl w-full text-center">
+
+                    <div
+                        class="mx-auto mb-6 w-16 h-16 rounded-3xl
+                               bg-slate-900 dark:bg-white
+                               flex items-center justify-center shadow-xl">
+
+                        <span
+                            class="text-2xl font-bold
+                                   text-white dark:text-slate-900">
+                            A
+                        </span>
+
+                    </div>
+
+                    <h2
+                        class="text-2xl md:text-4xl font-bold tracking-tight mb-4">
+
+                        أهلاً بك في Aurelius
+
+                    </h2>
+
+                    <p
+                        class="text-sm md:text-base
+                               leading-8 text-slate-500
+                               dark:text-slate-400 max-w-xl mx-auto">
+
+                        مساعدك الشخصي لفهم حياتك وتنظيمها
+                        وتحويل أهدافك إلى خطوات واضحة.
+
+                    </p>
+
+                    <!-- Suggestions -->
+                    <div
+                        class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-8">
+
+                        <button
+                            onclick="useSuggestion('ساعدني في تنظيم يومي')"
+                            class="text-right p-4 rounded-2xl
+                                   border border-slate-200
+                                   dark:border-slate-800
+                                   hover:bg-slate-100
+                                   dark:hover:bg-slate-900
+                                   transition">
+
+                            <div class="flex items-center gap-3">
+
+                                <i data-lucide="calendar-days"
+                                   class="w-5 h-5"></i>
+
+                                <div>
+                                    <div class="text-sm font-semibold">
+                                        تنظيم يومي
+                                    </div>
+
+                                    <div class="text-xs text-slate-500 mt-1">
+                                        ساعدني في ترتيب يومي
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </button>
+
+                        <button
+                            onclick="useSuggestion('أريد تحديد أهدافي القادمة')"
+                            class="text-right p-4 rounded-2xl
+                                   border border-slate-200
+                                   dark:border-slate-800
+                                   hover:bg-slate-100
+                                   dark:hover:bg-slate-900
+                                   transition">
+
+                            <div class="flex items-center gap-3">
+
+                                <i data-lucide="target"
+                                   class="w-5 h-5"></i>
+
+                                <div>
+                                    <div class="text-sm font-semibold">
+                                        أهدافي
+                                    </div>
+
+                                    <div class="text-xs text-slate-500 mt-1">
+                                        ساعدني على تحديد أهدافي
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </button>
+
+                        <button
+                            onclick="useSuggestion('أريد تحسين إدارة وقتي')"
+                            class="text-right p-4 rounded-2xl
+                                   border border-slate-200
+                                   dark:border-slate-800
+                                   hover:bg-slate-100
+                                   dark:hover:bg-slate-900
+                                   transition">
+
+                            <div class="flex items-center gap-3">
+
+                                <i data-lucide="clock-3"
+                                   class="w-5 h-5"></i>
+
+                                <div>
+                                    <div class="text-sm font-semibold">
+                                        إدارة الوقت
+                                    </div>
+
+                                    <div class="text-xs text-slate-500 mt-1">
+                                        كيف أستفيد من وقتي؟
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </button>
+
+                        <button
+                            onclick="useSuggestion('ساعدني في اتخاذ قرار')"
+                            class="text-right p-4 rounded-2xl
+                                   border border-slate-200
+                                   dark:border-slate-800
+                                   hover:bg-slate-100
+                                   dark:hover:bg-slate-900
+                                   transition">
+
+                            <div class="flex items-center gap-3">
+
+                                <i data-lucide="compass"
+                                   class="w-5 h-5"></i>
+
+                                <div>
+                                    <div class="text-sm font-semibold">
+                                        قرار مهم
+                                    </div>
+
+                                    <div class="text-xs text-slate-500 mt-1">
+                                        أحتاج مساعدة في قرار
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- Thinking -->
+        <div
+            id="thinkingIndicator"
+            class="hidden px-5 md:px-8 pb-3">
+
+            <div class="max-w-3xl mx-auto flex items-center gap-2
+                        text-slate-500 dark:text-slate-400">
+
+                <div class="flex gap-1">
+
+                    <span class="typing-dot w-1.5 h-1.5 rounded-full bg-current"></span>
+                    <span class="typing-dot w-1.5 h-1.5 rounded-full bg-current"></span>
+                    <span class="typing-dot w-1.5 h-1.5 rounded-full bg-current"></span>
+
+                </div>
+
+                <span class="text-xs">
+                    Aurelius يفكر...
+                </span>
+
+            </div>
+
+        </div>
+
+        <!-- Composer -->
+        <div
+            class="shrink-0 px-4 md:px-6 pb-4
+                   bg-gradient-to-t from-slate-50
+                   dark:from-slate-950
+                   via-slate-50 dark:via-slate-950
+                   to-transparent">
+
+            <div class="max-w-3xl mx-auto">
+
+                <div
+                    class="rounded-2xl border
+                           border-slate-200 dark:border-slate-800
+                           bg-white dark:bg-slate-900
+                           shadow-sm focus-within:ring-2
+                           focus-within:ring-slate-300
+                           dark:focus-within:ring-slate-700">
+
+                    <textarea
+                        id="chatInput"
+                        rows="1"
+                        placeholder="اكتب رسالتك إلى Aurelius..."
+                        class="w-full bg-transparent outline-none
+                               px-4 pt-4 pb-2 text-sm
+                               leading-7 min-h-[52px] max-h-40
+                               scrollbar"
+                        oninput="autoResize(this)"
+                        onkeydown="handleInputKeydown(event)">
+                    </textarea>
+
+                    <div class="flex items-center justify-between px-3 pb-3">
+
+                        <div class="flex items-center gap-1">
+
+                            <button
+                                onclick="showToast('المرفقات ستكون متاحة قريباً')"
+                                class="w-9 h-9 rounded-xl
+                                       hover:bg-slate-100
+                                       dark:hover:bg-slate-800
+                                       flex items-center justify-center">
+
+                                <i data-lucide="paperclip"
+                                   class="w-4 h-4"></i>
+
+                            </button>
+
+                            <button
+                                onclick="showToast('الإدخال الصوتي سيكون متاحاً قريباً')"
+                                class="w-9 h-9 rounded-xl
+                                       hover:bg-slate-100
+                                       dark:hover:bg-slate-800
+                                       flex items-center justify-center">
+
+                                <i data-lucide="mic"
+                                   class="w-4 h-4"></i>
+
+                            </button>
+
+                        </div>
+
+                        <button
+                            id="sendBtn"
+                            onclick="handleSendMessage()"
+                            class="w-10 h-10 rounded-xl
+                                   bg-slate-900
+                                   dark:bg-white
+                                   text-white dark:text-slate-900
+                                   flex items-center justify-center
+                                   hover:opacity-90 transition">
+
+                            <i data-lucide="arrow-up"
+                               class="w-5 h-5"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <p class="text-center text-[10px] text-slate-400 mt-2">
+                    Aurelius قد يخطئ أحياناً، تحقق من المعلومات المهمة.
+                </p>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+<!-- Memory Modal -->
+<div
+    id="memoryModal"
+    class="fixed inset-0 z-50 hidden items-center justify-center
+           bg-black/50 px-4">
+
+    <div
+        class="w-full max-w-lg max-h-[85vh]
+               bg-white dark:bg-slate-900
+               rounded-3xl shadow-2xl
+               border border-slate-200
+               dark:border-slate-800
+               overflow-hidden">
+
+        <div
+            class="flex items-center justify-between p-5
+                   border-b border-slate-200
+                   dark:border-slate-800">
+
+            <div>
+
+                <h3 class="font-bold">
+                    ذاكرة Aurelius
+                </h3>
+
+                <p class="text-xs text-slate-500 mt-1">
+                    المعلومات التي حفظتها في حسابك
+                </p>
+
+            </div>
+
+            <button
+                onclick="closeMemoryModal()"
+                class="w-9 h-9 rounded-xl
+                       hover:bg-slate-100
+                       dark:hover:bg-slate-800
+                       flex items-center justify-center">
+
+                <i data-lucide="x" class="w-4 h-4"></i>
+
+            </button>
+
+        </div>
+
+        <div
+            id="memoryList"
+            class="p-5 max-h-[55vh] overflow-y-auto scrollbar">
+        </div>
+
+        <div
+            class="p-5 border-t border-slate-200
+                   dark:border-slate-800">
+
+            <div class="flex gap-2">
+
+                <input
+                    id="memoryInput"
+                    type="text"
+                    placeholder="أضف معلومة تريد حفظها..."
+                    class="flex-1 rounded-xl
+                           border border-slate-200
+                           dark:border-slate-700
+                           bg-slate-50 dark:bg-slate-800
+                           px-3 py-2 text-sm outline-none">
+
+                <button
+                    onclick="addMemory()"
+                    class="px-4 rounded-xl
+                           bg-slate-900 dark:bg-white
+                           text-white dark:text-slate-900
+                           text-sm font-semibold">
+
+                    حفظ
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Toast -->
+<div
+    id="toast"
+    class="fixed bottom-5 left-1/2 -translate-x-1/2
+           z-[60] hidden">
+
+    <div
+        class="bg-slate-900 dark:bg-white
+               text-white dark:text-slate-900
+               px-4 py-3 rounded-xl shadow-xl
+               text-xs">
+
+        <span id="toastText"></span>
+
+    </div>
+
+</div>
+
+<script>
+/* =========================================================
+   Aurelius | Life Assistant
+   Frontend v0.1
+   ========================================================= */
+
+const API_URL = 'http://localhost:8000';
+
+let chats = JSON.parse(localStorage.getItem('aurelius_chats') || '[]');
+let currentChatId = localStorage.getItem('aurelius_current_chat');
+
+let memories = [];
+
+/* ---------------------------------------------------------
+   Helpers
+--------------------------------------------------------- */
+
+function generateId(prefix = 'id') {
+    return prefix + '_' + Date.now() + '_' +
+        Math.random().toString(36).slice(2, 8);
+}
+
+function saveState() {
+    localStorage.setItem(
+        'aurelius_chats',
+        JSON.stringify(chats)
+    );
+
+    if (currentChatId) {
+        localStorage.setItem(
+            'aurelius_current_chat',
+            currentChatId
+        );
+    }
+}
+
+function getCurrentChat() {
+    return chats.find(chat => chat.id === currentChatId);
+}
+
+/* ---------------------------------------------------------
+   Chats
+--------------------------------------------------------- */
+
+function createNewChat() {
+
+    const chat = {
+        id: generateId('chat'),
+        title: 'محادثة جديدة',
+        messages: [],
+        createdAt: new Date().toISOString()
+    };
+
+    chats.unshift(chat);
+
+    currentChatId = chat.id;
+
+    saveState();
+
+    renderChatList();
+    renderMessages();
+    updateHeader();
+
+    if (window.innerWidth < 1024) {
+        toggleSidebar(false);
+    }
+}
+
+function ensureChat() {
+
+    if (!chats.length) {
+        createNewChat();
+        return;
+    }
+
+    if (!currentChatId ||
+        !chats.some(chat => chat.id === currentChatId)) {
+
+        currentChatId = chats[0].id;
+        saveState();
+    }
+}
+
+function selectChat(id) {
+
+    currentChatId = id;
+
+    saveState();
+
+    renderChatList();
+    renderMessages();
+    updateHeader();
+
+    if (window.innerWidth < 1024) {
+        toggleSidebar(false);
+    }
+}
+
+function renderChatList() {
+
+    const container = document.getElementById('chatList');
+
+    if (!chats.length) {
+        container.innerHTML = `
+            <div class="text-center text-xs
+                        text-slate-400 py-8">
+                لا توجد محادثات بعد
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = chats.map(chat => {
+
+        const active = chat.id === currentChatId;
+
+        return `
+            <button
+                onclick="selectChat('${chat.id}')"
+                class="w-full text-right p-3 rounded-xl
+                       flex items-center gap-3
+                       transition
+                       ${active
+                           ? 'bg-slate-100 dark:bg-slate-800'
+                           : 'hover:bg-slate-100 dark:hover:bg-slate-800'}">
+
+                <i data-lucide="message-circle"
+                   class="w-4 h-4 shrink-0
+                          text-slate-400"></i>
+
+                <span class="text-xs truncate flex-1">
+                    ${escapeHtml(chat.title)}
+                </span>
+
+            </button>
+        `;
+
+    }).join('');
+
+    lucide.createIcons();
+}
+
+function updateHeader() {
+
+    const chat = getCurrentChat();
+
+    document.getElementById('headerTitle').textContent =
+        chat ? chat.title : 'محادثة جديدة';
+}
+
+/* ---------------------------------------------------------
+   Messages
+--------------------------------------------------------- */
+
+function renderMessages() {
+
+    const container = document.getElementById('chatMessages');
+    const chat = getCurrentChat();
+
+    if (!chat || !chat.messages.length) {
+
+        container.innerHTML = getWelcomeScreen();
+
+        lucide.createIcons();
+
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="max-w-3xl mx-auto px-4 md:px-6 py-8 space-y-6">
+            ${chat.messages.map(renderMessage).join('')}
+        </div>
+    `;
+
+    lucide.createIcons();
+
+    scrollToBottom();
+}
+
+function getWelcomeScreen() {
+
+    return `
+        <div
+            id="welcomeScreen"
+            class="min-h-full flex items-center justify-center px-5 py-10">
+
+            <div class="max-w-2xl w-full text-center">
+
+                <div
+                    class="mx-auto mb-6 w-16 h-16 rounded-3xl
+                           bg-slate-900 dark:bg-white
+                           flex items-center justify-center shadow-xl">
+
+                    <span
+                        class="text-2xl font-bold
+                               text-white dark:text-slate-900">
+                        A
+                    </span>
+
+                </div>
+
+                <h2
+                    class="text-2xl md:text-4xl font-bold
+                           tracking-tight mb-4">
+
+                    أهلاً بك في Aurelius
+
+                </h2>
+
+                <p
+                    class="text-sm md:text-base leading-8
+                           text-slate-500 dark:text-slate-400
+                           max-w-xl mx-auto">
+
+                    مساعدك الشخصي لفهم حياتك وتنظيمها
+                    وتحويل أهدافك إلى خطوات واضحة.
+
+                </p>
+
+                <div
+                    class="grid grid-cols-1 sm:grid-cols-2
+                           gap-3 mt-8">
+
+                    <button
+                        onclick="useSuggestion('ساعدني في تنظيم يومي')"
+                        class="text-right p-4 rounded-2xl
+                               border border-slate-200
+                               dark:border-slate-800
+                               hover:bg-slate-100
+                               dark:hover:bg-slate-900
+                               transition">
+
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="calendar-days"
+                               class="w-5 h-5"></i>
+
+                            <div>
+                                <div class="text-sm font-semibold">
+                                    تنظيم يومي
+                                </div>
+
+                                <div class="text-xs text-slate-500 mt-1">
+                                    ساعدني في ترتيب يومي
+                                </div>
+                            </div>
+                        </div>
+
+                    </button>
+
+                    <button
+                        onclick="useSuggestion('أريد تحديد أهدافي القادمة')"
+                        class="text-right p-4 rounded-2xl
+                               border border-slate-200
+                               dark:border-slate-800
+                               hover:bg-slate-100
+                               dark:hover:bg-slate-900
+                               transition">
+
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="target"
+                               class="w-5 h-5"></i>
+
+                            <div>
+                                <div class="text-sm font-semibold">
+                                    أهدافي
+                                </div>
+
+                                <div class="text-xs text-slate-500 mt-1">
+                                    ساعدني على تحديد أهدافي
+                                </div>
+                            </div>
+                        </div>
+
+                    </button>
+
+                    <button
+                        onclick="useSuggestion('أريد تحسين إدارة وقتي')"
+                        class="text-right p-4 rounded-2xl
+                               border border-slate-200
+                               dark:border-slate-800
+                               hover:bg-slate-100
+                               dark:hover:bg-slate-900
+                               transition">
+
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="clock-3"
+                               class="w-5 h-5"></i>
+
+                            <div>
+                                <div class="text-sm font-semibold">
+                                    إدارة الوقت
+                                </div>
+
+                                <div class="text-xs text-slate-500 mt-1">
+                                    كيف أستفيد من وقتي؟
+                                </div>
+                            </div>
+                        </div>
+
+                    </button>
+
+                    <button
+                        onclick="useSuggestion('ساعدني في اتخاذ قرار')"
+                        class="text-right p-4 rounded-2xl
+                               border border-slate-200
+                               dark:border-slate-800
+                               hover:bg-slate-100
+                               dark:hover:bg-slate-900
+                               transition">
+
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="compass"
+                               class="w-5 h-5"></i>
+
+                            <div>
+                                <div class="text-sm font-semibold">
+                                    قرار مهم
+                                </div>
+
+                                <div class="text-xs text-slate-500 mt-1">
+                                    أحتاج مساعدة في قرار
+                                </div>
+                            </div>
+                        </div>
+
+                    </button>
+
+                </div>
+
+            </div>
+        </div>
+    `;
+}
+
+function renderMessage(message) {
+
+    const isUser = message.sender === 'user';
+
+    if (isUser) {
+
+        return `
+            <div class="flex justify-start fade-in">
+
+                <div class="max-w-[85%] md:max-w-[75%]">
+
+                    <div
+                        class="rounded-2xl rounded-br-md
+                               bg-slate-900 dark:bg-white
+                               text-white dark:text-slate-900
+                               px-4 py-3">
+
+                        <div class="message-content
+                                    text-sm leading-7 whitespace-pre-wrap">
+                            ${escapeHtml(message.text)}
+                        </div>
+
+                    </div>
+
+                    <div
+                        class="text-[9px] text-slate-400
+                               mt-1 px-1">
+
+                        ${message.timestamp || ''}
+
+                    </div>
+
+                </div>
+
+            </div>
+        `;
+    }
+
+    return `
+        <div class="flex justify-end fade-in">
+
+            <div class="w-full max-w-[90%] md:max-w-[85%]">
+
+                <div class="flex items-start gap-3">
+
+                    <div
+                        class="w-9 h-9 shrink-0 rounded-xl
+                               bg-slate-900 dark:bg-white
+                               flex items-center justify-center">
+
+                        <span
+                            class="font-bold text-sm
+                                   text-white dark:text-slate-900">
+                            A
+                        </span>
+
+                    </div>
+
+                    <div class="flex-1 min-w-0">
+
+                        <div
+                            class="message-content text-sm
+                                   leading-8 text-slate-700
+                                   dark:text-slate-200 whitespace-pre-wrap">
+
+                            ${formatAIText(message.text)}
+
+                        </div>
+
+                        <div class="flex items-center gap-2 mt-2">
+
+                            <span
+                                class="text-[9px] text-slate-400">
+                                ${message.timestamp || ''}
+                            </span>
+
+                            <button
+                                onclick="copyMessage(this)"
+                                data-copy="${escapeAttribute(message.text)}"
+                                class="w-7 h-7 rounded-lg
+                                       hover:bg-slate-100
+                                       dark:hover:bg-slate-800
+                                       flex items-center justify-center">
+
+                                <i data-lucide="copy"
+                                   class="w-3.5 h-3.5"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    `;
+}
+
+/* ---------------------------------------------------------
+   Real Backend Chat
+--------------------------------------------------------- */
+
+async function handleSendMessage() {
+
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+
+    if (!text) return;
+
+    ensureChat();
+
+    const chat = getCurrentChat();
+
+    if (!chat) return;
+
+    // منع إرسال طلب آخر أثناء التفكير
+    if (input.disabled) return;
+
+    // User message
+    chat.messages.push({
+        id: generateId('msg'),
+        sender: 'user',
+        text: text,
+        timestamp: getTime()
+    });
+
+    // Update title
+    if (chat.messages.length === 1) {
+
+        chat.title =
+            text.length > 28
+                ? text.slice(0, 28) + '...'
+                : text;
+    }
+
+    input.value = '';
+    input.style.height = 'auto';
+
+    saveState();
+
+    renderChatList();
+    renderMessages();
+    updateHeader();
+
+    showThinking(true);
+
+    input.disabled = true;
+
+    try {
+
+        const response = await fetch(
+            `${API_URL}/chat`,
+            {
+                method: 'POST',
+
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+                body: JSON.stringify({
+                    message: text
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.reply) {
+
+            throw new Error(
+                data.error || 'Backend error'
+            );
+        }
+
+        chat.messages.push({
+            id: generateId('msg'),
+            sender: 'bot',
+            text: data.reply,
+            timestamp: getTime()
+        });
+
+        saveState();
+
+        renderMessages();
+
+    } catch (error) {
+
+        console.error(
+            'Aurelius Backend Error:',
+            error
+        );
+
+        chat.messages.push({
+            id: generateId('msg'),
+            sender: 'bot',
+            text:
+                'تعذر الاتصال بـ Aurelius حالياً.\n\n' +
+                'تأكد من أن Backend يعمل على المنفذ 8000.',
+            timestamp: getTime()
+        });
+
+        saveState();
+
+        renderMessages();
+
+        showToast(
+            'تعذر الاتصال بالخادم'
+        );
+
+    } finally {
+
+        showThinking(false);
+
+        input.disabled = false;
+
+        input.focus();
+    }
+}
+
+/* ---------------------------------------------------------
+   Input
+--------------------------------------------------------- */
+
+function handleInputKeydown(event) {
+
+    if (
+        event.key === 'Enter' &&
+        !event.shiftKey
+    ) {
+
+        event.preventDefault();
+
+        handleSendMessage();
+    }
+}
+
+function autoResize(element) {
+
+    element.style.height = 'auto';
+
+    element.style.height =
+        Math.min(element.scrollHeight, 160) + 'px';
+}
+
+function useSuggestion(text) {
+
+    const input = document.getElementById('chatInput');
+
+    input.value = text;
+
+    autoResize(input);
+
+    input.focus();
+
+    handleSendMessage();
+}
+
+/* ---------------------------------------------------------
+   Thinking
+--------------------------------------------------------- */
+
+function showThinking(show) {
+
+    const indicator =
+        document.getElementById('thinkingIndicator');
+
+    if (show) {
+
+        indicator.classList.remove('hidden');
+
+        scrollToBottom();
+
+    } else {
+
+        indicator.classList.add('hidden');
+    }
+}
+
+/* ---------------------------------------------------------
+   Memory
+--------------------------------------------------------- */
+
+async function loadMemories() {
+
+    try {
+
+        const response =
+            await fetch(`${API_URL}/memory`);
+
+        if (!response.ok) {
+            throw new Error('Memory request failed');
+        }
+
+        const data =
+            await response.json();
+
+        memories = flattenMemory(data);
+
+        updateMemoryCount();
+
+    } catch (error) {
+
+        console.error(
+            'Memory Error:',
+            error
+        );
+
+        memories = [];
+
+        updateMemoryCount();
+    }
+}
+
+function flattenMemory(data) {
+
+    const result = [];
+
+    for (const category in data) {
+
+        if (!Array.isArray(data[category])) {
+            continue;
+        }
+
+        data[category].forEach(item => {
+
+            result.push({
+                category: category,
+                content: item
+            });
+
+        });
+    }
+
+    return result;
+}
+
+function updateMemoryCount() {
+
+    document.getElementById('memoryCount').textContent =
+        `${memories.length} معلومة`;
+}
+
+function openMemoryModal() {
+
+    renderMemoryList();
+
+    const modal =
+        document.getElementById('memoryModal');
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeMemoryModal() {
+
+    const modal =
+        document.getElementById('memoryModal');
+
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function renderMemoryList() {
+
+    const container =
+        document.getElementById('memoryList');
+
+    if (!memories.length) {
+
+        container.innerHTML = `
+            <div class="text-center py-10">
+
+                <i data-lucide="brain"
+                   class="w-10 h-10 mx-auto
+                          text-slate-300
+                          dark:text-slate-700">
+                </i>
+
+                <p class="text-sm text-slate-500 mt-3">
+                    لا توجد معلومات محفوظة بعد.
+                </p>
+
+            </div>
+        `;
+
+        lucide.createIcons();
+
+        return;
+    }
+
+    container.innerHTML = memories.map(memory => `
+
+        <div
+            class="flex items-start gap-3 p-3 rounded-xl
+                   bg-slate-50 dark:bg-slate-800/60 mb-2">
+
+            <div class="flex-1">
+
+                <div class="text-[10px] text-slate-400 mb-1">
+                    ${escapeHtml(memory.category)}
+                </div>
+
+                <div class="text-sm leading-6">
+                    ${escapeHtml(memory.content)}
+                </div>
+
+            </div>
+
+        </div>
+
+    `).join('');
+
+    lucide.createIcons();
+}
+
+/*
+    ملاحظة:
+    إضافة الذاكرة مرتبطة حالياً بـ POST /memory
+    الموجود في Backend.
+*/
+
+async function addMemory() {
+
+    const input =
+        document.getElementById('memoryInput');
+
+    const content =
+        input.value.trim();
+
+    if (!content) return;
+
+    try {
+
+        const response =
+            await fetch(`${API_URL}/memory`, {
+
+                method: 'POST',
+
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+                body: JSON.stringify({
+                    category: 'facts',
+                    content: content
+                })
+
+            });
+
+        const data =
+            await response.json();
+
+        if (!response.ok || data.error) {
+
+            throw new Error(
+                data.error || 'Memory error'
+            );
+        }
+
+        input.value = '';
+
+        await loadMemories();
+
+        renderMemoryList();
+
+        showToast(
+            'تم حفظ المعلومة'
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(
+            'تعذر حفظ المعلومة'
+        );
+    }
+}
+
+/* ---------------------------------------------------------
+   Chat actions
+--------------------------------------------------------- */
+
+function clearCurrentChat() {
+
+    const chat = getCurrentChat();
+
+    if (!chat || !chat.messages.length) {
+        return;
+    }
+
+    chat.messages = [];
+
+    saveState();
+
+    renderMessages();
+
+    showToast(
+        'تم مسح المحادثة'
+    );
+}
+
+/* ---------------------------------------------------------
+   Theme
+--------------------------------------------------------- */
+
+function toggleTheme() {
+
+    const isDark =
+        document.documentElement.classList.toggle('dark');
+
+    localStorage.setItem(
+        'aurelius_theme',
+        isDark ? 'dark' : 'light'
+    );
+
+    updateThemeUI();
+}
+
+function applyTheme() {
+
+    const saved =
+        localStorage.getItem('aurelius_theme');
+
+    if (saved === 'dark') {
+
+        document.documentElement.classList.add('dark');
+
+    } else if (saved === 'light') {
+
+        document.documentElement.classList.remove('dark');
+
+    } else {
+
+        if (
+            window.matchMedia &&
+            window.matchMedia(
+                '(prefers-color-scheme: dark)'
+            ).matches
+        ) {
+
+            document.documentElement.classList.add('dark');
+        }
+    }
+
+    updateThemeUI();
+}
+
+function updateThemeUI() {
+
+    const dark =
+        document.documentElement.classList.contains('dark');
+
+    document.getElementById('themeText').textContent =
+        dark ? 'الوضع الفاتح' : 'الوضع الداكن';
+
+    document.getElementById('themeIcon').setAttribute(
+        'data-lucide',
+        dark ? 'sun' : 'moon'
+    );
+
+    lucide.createIcons();
+}
+
+/* ---------------------------------------------------------
+   Sidebar
+--------------------------------------------------------- */
+
+function toggleSidebar(force) {
+
+    const sidebar =
+        document.getElementById('sidebar');
+
+    const overlay =
+        document.getElementById('sidebarOverlay');
+
+    const isOpen =
+        !sidebar.classList.contains('translate-x-full');
+
+    const shouldOpen =
+        typeof force === 'boolean'
+            ? force
+            : !isOpen;
+
+    if (shouldOpen) {
+
+        sidebar.classList.remove(
+            'translate-x-full'
+        );
+
+        overlay.classList.remove(
+            'hidden'
+        );
+
+    } else {
+
+        sidebar.classList.add(
+            'translate-x-full'
+        );
+
+        overlay.classList.add(
+            'hidden'
+        );
+    }
+}
+
+/* ---------------------------------------------------------
+   Utilities
+--------------------------------------------------------- */
+
+function getTime() {
+
+    return new Date().toLocaleTimeString(
+        'ar-SA',
+        {
+            hour: '2-digit',
+            minute: '2-digit'
+        }
+    );
+}
+
+function scrollToBottom() {
+
+    const container =
+        document.getElementById('chatMessages');
+
+    requestAnimationFrame(() => {
+
+        container.scrollTop =
+            container.scrollHeight;
+
+    });
+}
+
+function escapeHtml(value) {
+
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function escapeAttribute(value) {
+
+    return escapeHtml(value)
+        .replace(/`/g, '&#096;');
+}
+
+function formatAIText(text) {
+
+    let result =
+        escapeHtml(text);
+
+    // Bold
+    result =
+        result.replace(
+            /\*\*(.*?)\*\*/g,
+            '<strong>$1</strong>'
+        );
+
+    // Inline code
+    result =
+        result.replace(
+            /`([^`]+)`/g,
+            '<code>$1</code>'
+        );
+
+    return result;
+}
+
+async function copyMessage(button) {
+
+    const text =
+        button.getAttribute('data-copy');
+
+    try {
+
+        await navigator.clipboard.writeText(text);
+
+        showToast(
+            'تم نسخ الرسالة'
+        );
+
+    } catch {
+
+        showToast(
+            'تعذر النسخ'
+        );
+    }
+}
+
+function showToast(message) {
+
+    const toast =
+        document.getElementById('toast');
+
+    const text =
+        document.getElementById('toastText');
+
+    text.textContent = message;
+
+    toast.classList.remove('hidden');
+
+    clearTimeout(
+        window.aureliusToastTimer
+    );
+
+    window.aureliusToastTimer =
+        setTimeout(() => {
+
+            toast.classList.add('hidden');
+
+        }, 2200);
+}
+
+/* ---------------------------------------------------------
+   Initialization
+--------------------------------------------------------- */
+
+async function init() {
+
+    applyTheme();
+
+    ensureChat();
+
+    renderChatList();
+    renderMessages();
+    updateHeader();
+
+    await loadMemories();
+
+    lucide.createIcons();
+}
+
+init();
+
+</script>
+
+</body>
+</html>

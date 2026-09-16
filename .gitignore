@@ -1,0 +1,10 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+
+
+Android/
+Aurelius-v0.1-debug.apk
+gradle-wrapper-temp/
+memory.json
