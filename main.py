@@ -30,6 +30,10 @@ AI_API_KEY = os.getenv("AI_API_KEY")
 
 
 def load_memory():
+    if not MEMORY_FILE.exists():
+        memory = {"facts": [], "preferences": [], "goals": [], "events": []}
+        save_memory(memory)
+        return memory
     with open(MEMORY_FILE, "r", encoding="utf-8") as file:
         return json.load(file)
 
